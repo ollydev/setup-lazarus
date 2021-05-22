@@ -1,0 +1,11 @@
+name: 'Hello World'
+description: 'Greet someone and record the time'
+inputs:
+  laz-url: 
+    required: true
+  fpc-url: 
+    required: false
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
+
