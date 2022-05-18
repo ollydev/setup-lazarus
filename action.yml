@@ -1,5 +1,5 @@
-name: 'Hello World'
-description: 'Greet someone and record the time'
+name: 'Setup Lazarus'
+description: 'Setup Lazarus using sourceforge installers'
 inputs:
   laz-url: 
     required: true
@@ -7,5 +7,5 @@ inputs:
     required: false
 runs:
   using: 'node12'
-  main: 'dist/index.js'
+  main: 'dist/index/index.js'
 

@@ -39,10 +39,6 @@ async function install_windows(file) {
 
 async function install(url) {
 
-    if (!url) {
-        return;
-    }
-
     console.log('Installing: ', url);
 
     file = await tc.downloadTool(url, path.join(process.env['RUNNER_TEMP'], path.basename(url)));
@@ -65,15 +61,16 @@ async function install(url) {
 async function run() {
 
     try {
-        // Install FPCs
-        for (const url of core.getInput('fpc-url').split(os.EOL)) {
+   		if (process.platform == 'linux') {
+            await exec.exec('sudo apt-get update');
+        } 
+    
+        for (const url of core.getInput('fpc-url').split(os.EOL).filter(Boolean)) {
             await install(url);
         }
-
-        // Install Lazarus
         await install(core.getInput('laz-url'));
 
-        // Add to system path if needed
+        // Add to system path
         switch (os.platform()) {
             case 'win32':
                 core.addPath(path.join(process.env['RUNNER_TEMP'], 'lazarus'));
