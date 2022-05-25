@@ -1,11 +1,14 @@
 name: 'Setup Lazarus'
-description: 'Setup Lazarus using sourceforge installers'
+description: 'Setup Lazarus using installers from sourceforge'
 inputs:
   laz-url: 
     required: true
   fpc-url: 
     required: false
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index/index.js'
+  post: 'dist/post/index.js'
+  post-if: env.SAVE_CACHE_KEY != ''  
+  
 

@@ -45450,178 +45450,6 @@ function range(a, b, str) {
 
 /***/ }),
 
-/***/ 5848:
-/***/ (function(module, exports, __nccwpck_require__) {
-
-/* module decorator */ module = __nccwpck_require__.nmd(module);
-/*! https://mths.be/base64 v1.0.0 by @mathias | MIT license */
-;(function(root) {
-
-	// Detect free variables `exports`.
-	var freeExports =  true && exports;
-
-	// Detect free variable `module`.
-	var freeModule =  true && module &&
-		module.exports == freeExports && module;
-
-	// Detect free variable `global`, from Node.js or Browserified code, and use
-	// it as `root`.
-	var freeGlobal = typeof global == 'object' && global;
-	if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
-		root = freeGlobal;
-	}
-
-	/*--------------------------------------------------------------------------*/
-
-	var InvalidCharacterError = function(message) {
-		this.message = message;
-	};
-	InvalidCharacterError.prototype = new Error;
-	InvalidCharacterError.prototype.name = 'InvalidCharacterError';
-
-	var error = function(message) {
-		// Note: the error messages used throughout this file match those used by
-		// the native `atob`/`btoa` implementation in Chromium.
-		throw new InvalidCharacterError(message);
-	};
-
-	var TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-	// http://whatwg.org/html/common-microsyntaxes.html#space-character
-	var REGEX_SPACE_CHARACTERS = /[\t\n\f\r ]/g;
-
-	// `decode` is designed to be fully compatible with `atob` as described in the
-	// HTML Standard. http://whatwg.org/html/webappapis.html#dom-windowbase64-atob
-	// The optimized base64-decoding algorithm used is based on @atk’s excellent
-	// implementation. https://gist.github.com/atk/1020396
-	var decode = function(input) {
-		input = String(input)
-			.replace(REGEX_SPACE_CHARACTERS, '');
-		var length = input.length;
-		if (length % 4 == 0) {
-			input = input.replace(/==?$/, '');
-			length = input.length;
-		}
-		if (
-			length % 4 == 1 ||
-			// http://whatwg.org/C#alphanumeric-ascii-characters
-			/[^+a-zA-Z0-9/]/.test(input)
-		) {
-			error(
-				'Invalid character: the string to be decoded is not correctly encoded.'
-			);
-		}
-		var bitCounter = 0;
-		var bitStorage;
-		var buffer;
-		var output = '';
-		var position = -1;
-		while (++position < length) {
-			buffer = TABLE.indexOf(input.charAt(position));
-			bitStorage = bitCounter % 4 ? bitStorage * 64 + buffer : buffer;
-			// Unless this is the first of a group of 4 characters…
-			if (bitCounter++ % 4) {
-				// …convert the first 8 bits to a single ASCII character.
-				output += String.fromCharCode(
-					0xFF & bitStorage >> (-2 * bitCounter & 6)
-				);
-			}
-		}
-		return output;
-	};
-
-	// `encode` is designed to be fully compatible with `btoa` as described in the
-	// HTML Standard: http://whatwg.org/html/webappapis.html#dom-windowbase64-btoa
-	var encode = function(input) {
-		input = String(input);
-		if (/[^\0-\xFF]/.test(input)) {
-			// Note: no need to special-case astral symbols here, as surrogates are
-			// matched, and the input is supposed to only contain ASCII anyway.
-			error(
-				'The string to be encoded contains characters outside of the ' +
-				'Latin1 range.'
-			);
-		}
-		var padding = input.length % 3;
-		var output = '';
-		var position = -1;
-		var a;
-		var b;
-		var c;
-		var buffer;
-		// Make sure any padding is handled outside of the loop.
-		var length = input.length - padding;
-
-		while (++position < length) {
-			// Read three bytes, i.e. 24 bits.
-			a = input.charCodeAt(position) << 16;
-			b = input.charCodeAt(++position) << 8;
-			c = input.charCodeAt(++position);
-			buffer = a + b + c;
-			// Turn the 24 bits into four chunks of 6 bits each, and append the
-			// matching character for each of them to the output.
-			output += (
-				TABLE.charAt(buffer >> 18 & 0x3F) +
-				TABLE.charAt(buffer >> 12 & 0x3F) +
-				TABLE.charAt(buffer >> 6 & 0x3F) +
-				TABLE.charAt(buffer & 0x3F)
-			);
-		}
-
-		if (padding == 2) {
-			a = input.charCodeAt(position) << 8;
-			b = input.charCodeAt(++position);
-			buffer = a + b;
-			output += (
-				TABLE.charAt(buffer >> 10) +
-				TABLE.charAt((buffer >> 4) & 0x3F) +
-				TABLE.charAt((buffer << 2) & 0x3F) +
-				'='
-			);
-		} else if (padding == 1) {
-			buffer = input.charCodeAt(position);
-			output += (
-				TABLE.charAt(buffer >> 2) +
-				TABLE.charAt((buffer << 4) & 0x3F) +
-				'=='
-			);
-		}
-
-		return output;
-	};
-
-	var base64 = {
-		'encode': encode,
-		'decode': decode,
-		'version': '1.0.0'
-	};
-
-	// Some AMD build optimizers, like r.js, check for specific condition patterns
-	// like the following:
-	if (
-		typeof define == 'function' &&
-		typeof define.amd == 'object' &&
-		define.amd
-	) {
-		define(function() {
-			return base64;
-		});
-	}	else if (freeExports && !freeExports.nodeType) {
-		if (freeModule) { // in Node.js or RingoJS v0.8.0+
-			freeModule.exports = base64;
-		} else { // in Narwhal or RingoJS v0.7.0-
-			for (var key in base64) {
-				base64.hasOwnProperty(key) && (freeExports[key] = base64[key]);
-			}
-		}
-	} else { // in Rhino or a web browser
-		root.base64 = base64;
-	}
-
-}(this));
-
-
-/***/ }),
-
 /***/ 3717:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -60404,8 +60232,8 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -60418,23 +60246,11 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
 /******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/node module decorator */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.nmd = (module) => {
-/******/ 			module.paths = [];
-/******/ 			if (!module.children) module.children = [];
-/******/ 			return module;
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
@@ -60444,142 +60260,14 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const core = __nccwpck_require__(2186);
-const exec = __nccwpck_require__(1514);
 const cache = __nccwpck_require__(7799);
 const process = __nccwpck_require__(7282);
-const path = __nccwpck_require__(1017);
-const os = __nccwpck_require__(2037);
-const fs = __nccwpck_require__(7147);
-const base64 = __nccwpck_require__(5848);
-
-const cache_key = base64.encode(core.getInput('laz-url') + core.getInput('fpc-url'))
-const installer_dir = path.join(process.env['RUNNER_TEMP'], 'installers')
-
-async function restore_installers() {
-
-    await exec.exec('mkdir -p ' + installer_dir);
-    await cache.restoreCache([installer_dir], cache_key) != null;
-}
-
-async function check_installer(filename) {
-
-    if (fs.existsSync(filename) && (fs.statSync(filename).size == 0)) {
-        fs.unlinkSync(filename);
-    }
-
-    return fs.existsSync(filename);
-}
-
-async function download_installer(url) {
-
-    filename = path.join(installer_dir, path.basename(url));
-
-    if (await check_installer(filename) == false) {
-        await exec.exec('curl --progress-bar -L -o "' + filename + '" ' + url);
-
-        if (await check_installer(filename)) {
-            core.exportVariable('SAVE_CACHE_DIR', installer_dir);
-            core.exportVariable('SAVE_CACHE_KEY', cache_key);
-        }
-    }
-
-    return filename;
-}
-
-async function install_macos(file) {
-
-    function checkmount(file) {
-        return (file.toLowerCase().startsWith('lazarus') || file.toLowerCase().startsWith('fpc'))
-    }
-
-    function checkpkg(file) {
-        return (file.toLowerCase().startsWith('lazarus') || file.toLowerCase().startsWith('fpc')) && (file.endsWith('.pkg') || file.endsWith('.mpkg'))
-    }
-
-    switch (path.extname(file)) {
-        case '.dmg':
-            await exec.exec('sudo hdiutil attach ' + file);
-
-            var mounts = fs.readdirSync('/Volumes/').filter(checkmount);
-            for (const mount of mounts) {
-                var pkgs = fs.readdirSync('/Volumes/' + mount).filter(checkpkg);
-                for (const pkg of pkgs) {
-                    await exec.exec('sudo installer -package "' + path.join('/Volumes/', mount, pkg) + '" -target /');
-                }
-            }
-			
-			for (const mount of mounts) {
-				await exec.exec('sudo hdiutil detach /Volumes/' + mount);			
-            }
-            break;
-
-        case '.pkg':
-            await exec.exec('sudo installer -package ' + file + ' -target /');
-            break;
-    }
-}
-
-async function install_linux(file) {
-
-    await exec.exec('sudo apt install -y ' + file);
-}
-
-
-async function install_windows(file) {
-
-    await exec.exec(file + ' /VERYSILENT /DIR=' + path.join(process.env['RUNNER_TEMP'], 'lazarus'));
-}
-
-async function install(url) {
-
-    if (url == '') {
-        return
-    }
-
-    filename = await download_installer(url);
-
-    switch (os.platform()) {
-        case 'linux':
-            await install_linux(filename);
-            break;
-
-        case 'win32':
-            await install_windows(filename);
-            break;
-
-        case 'darwin':
-            await install_macos(filename);
-            break;
-    }
-}
 
 async function run() {
-
     try {
-        if (os.platform() == 'linux') {
-            await exec.exec('sudo apt-get update');
-        }
-
-        await restore_installers()
-
-        for (const url of core.getInput('fpc-url').split(os.EOL)) {
-            await install(url);
-        }
-        for (const url of core.getInput('laz-url').split(os.EOL)) {
-            await install(url);
-        }
-
-        switch (os.platform()) {
-            case 'win32':
-                core.addPath(path.join(process.env['RUNNER_TEMP'], 'lazarus'));
-                break;
-
-            case 'darwin':
-                core.addPath('/Applications/Lazarus');
-                break;
-        }
+        await cache.saveCache([process.env['SAVE_CACHE_DIR']], process.env['SAVE_CACHE_KEY']);
     } catch (error) {
-        core.setFailed(error.message);
+        console.log(error.message);
     }
 }
 
