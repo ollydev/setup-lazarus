@@ -6,39 +6,86 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs');
 const base64 = require('base-64');
+const { DownloaderHelper } = require('node-downloader-helper');
 
-const cache_key = base64.encode(core.getInput('laz-url') + core.getInput('fpc-url'))
-const installer_dir = path.join(process.env['RUNNER_TEMP'], 'installers')
+function installersLocation() {
 
-async function restore_installers() {
-
-    await exec.exec('mkdir -p ' + installer_dir);
-    await cache.restoreCache([installer_dir], cache_key) != null;
+	return path.join(process.env['RUNNER_TEMP'], 'installers'); 
 }
 
-async function check_installer(filename) {
+function installedLocation() {
 
-    if (fs.existsSync(filename) && (fs.statSync(filename).size == 0)) {
-        fs.unlinkSync(filename);
+	switch (os.platform()) {
+        case 'linux':
+            return '';
+            break;
+
+        case 'win32':
+            return path.join(process.env['RUNNER_TEMP'], 'lazarus');
+            break;
+
+        case 'darwin':
+            return '/Applications/Lazarus/';
+            break;
     }
-
-    return fs.existsSync(filename);
 }
 
-async function download_installer(url) {
+function useCache() {
 
-    filename = path.join(installer_dir, path.basename(url));
+	return core.getInput('use-cache').toUpperCase() == 'TRUE';
+}
 
-    if (await check_installer(filename) == false) {
-        await exec.exec('curl --progress-bar -L -o "' + filename + '" ' + url);
+function lazURL() {
 
-        if (await check_installer(filename)) {
-            core.exportVariable('SAVE_CACHE_DIR', installer_dir);
-            core.exportVariable('SAVE_CACHE_KEY', cache_key);
-        }
-    }
+	return core.getInput('laz-url').split(os.EOL);
+}
 
-    return filename;
+function fpcURL() {
+
+	return core.getInput('fpc-url').split(os.EOL);
+}
+
+function cacheKey() {
+
+	return base64.encode(core.getInput('laz-url') + '|' + core.getInput('fpc-url'));
+}
+
+
+function sleep(millis) {
+
+    return new Promise(resolve => setTimeout(resolve, millis));
+}
+
+async function downloadInstaller(url) {
+
+	success = false
+
+	options = {
+		fileName: { name: path.basename(url), ext: true }, 
+		retry: { maxRetries: 5, delay: 3000 }, 
+		override: true 
+	}
+
+	console.log('Downloading: ' + url);
+	
+	for (var retry = 0; retry < 20; retry++) {
+		
+		console.log('Retry: ' + retry);
+		
+		dl = new DownloaderHelper(url, installersLocation(), options);
+		dl.on('error', (e) => { console.log('Download error: ' + e.status) });
+		dl.on("end",  () => { console.log('Download complete'); success = true });
+		dl.on('progress.throttled', (stats) => console.log('Download progress: ' + Math.round(stats.progress) + '%'));
+
+		await dl.start().catch( e => {} );
+		if (success) {
+			break;
+		}
+		
+		await sleep(3000);
+	}
+	
+	return success;
 }
 
 async function install_macos(file) {
@@ -82,17 +129,24 @@ async function install_linux(file) {
 
 async function install_windows(file) {
 
-    await exec.exec(file + ' /VERYSILENT /DIR=' + path.join(process.env['RUNNER_TEMP'], 'lazarus'));
+    await exec.exec(file + ' /VERYSILENT /DIR=' + installedLocation());
 }
 
-async function install(url) {
+async function install(url, download) {
 
     if (url == '') {
         return
     }
 
-    filename = await download_installer(url);
-
+	filename = path.join(installersLocation(), path.basename(url));
+	
+	if (download) {
+		const downloaded = await downloadInstaller(url);
+		if (!downloaded) {
+			throw new Error('Failed to download: ' + url);
+		}	
+	}
+	
     switch (os.platform()) {
         case 'linux':
             await install_linux(filename);
@@ -111,28 +165,29 @@ async function install(url) {
 async function run() {
 
     try {
+    	await exec.exec('mkdir -p ' + installersLocation());
+        
         if (os.platform() == 'linux') {
             await exec.exec('sudo apt-get update');
+        }   	
+        
+        var cacheLoaded = false;
+        if (useCache()) {
+			cacheLoaded = await cache.restoreCache([installersLocation()], cacheKey()) != null;
+			if (!cacheLoaded) {
+				core.exportVariable('SAVE_CACHE_DIR', installersLocation());
+    			core.exportVariable('SAVE_CACHE_KEY', cacheKey());
+			}
+		}
+
+        for (const url of fpcURL()) {
+            await install(url, cacheLoaded == false);
+        }
+        for (const url of lazURL()) {
+            await install(url, cacheLoaded == false);
         }
 
-        await restore_installers()
-
-        for (const url of core.getInput('fpc-url').split(os.EOL)) {
-            await install(url);
-        }
-        for (const url of core.getInput('laz-url').split(os.EOL)) {
-            await install(url);
-        }
-
-        switch (os.platform()) {
-            case 'win32':
-                core.addPath(path.join(process.env['RUNNER_TEMP'], 'lazarus'));
-                break;
-
-            case 'darwin':
-                core.addPath('/Applications/Lazarus');
-                break;
-        }
+		core.addPath(installedLocation());
     } catch (error) {
         core.setFailed(error.message);
     }

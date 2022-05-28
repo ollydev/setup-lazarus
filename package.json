@@ -24,11 +24,12 @@
     "@actions/tool-cache": "^2.0.1",
     "base-64": "^1.0.0",
     "fs": "0.0.1-security",
+    "node-downloader-helper": "^2.1.1",
     "os": "^0.1.2",
     "path": "^0.12.7",
     "process": "^0.11.10"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.33.4"
+    "@vercel/ncc": "^0.34.0"
   }
 }
