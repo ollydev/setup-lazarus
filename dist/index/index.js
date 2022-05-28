@@ -47348,6 +47348,14 @@ function regExpEscape (s) {
 
 /***/ }),
 
+/***/ 5775:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", ({value:!0})),exports.DownloaderHelper=exports.DH_STATES=void 0;var _typeof='function'==typeof Symbol&&'symbol'==typeof Symbol.iterator?function(a){return typeof a}:function(a){return a&&'function'==typeof Symbol&&a.constructor===Symbol&&a!==Symbol.prototype?'symbol':typeof a},_createClass=function(){function a(a,b){for(var c,d=0;d<b.length;d++)c=b[d],c.enumerable=c.enumerable||!1,c.configurable=!0,'value'in c&&(c.writable=!0),Object.defineProperty(a,c.key,c)}return function(b,c,d){return c&&a(b.prototype,c),d&&a(b,d),b}}(),_fs=__nccwpck_require__(7147),fs=_interopRequireWildcard(_fs),_url=__nccwpck_require__(7310),_path=__nccwpck_require__(1017),path=_interopRequireWildcard(_path),_http=__nccwpck_require__(3685),http=_interopRequireWildcard(_http),_https=__nccwpck_require__(5687),https=_interopRequireWildcard(_https),_events=__nccwpck_require__(2361);function _interopRequireWildcard(a){if(a&&a.__esModule)return a;var b={};if(null!=a)for(var c in a)Object.prototype.hasOwnProperty.call(a,c)&&(b[c]=a[c]);return b.default=a,b}function _classCallCheck(a,b){if(!(a instanceof b))throw new TypeError('Cannot call a class as a function')}function _possibleConstructorReturn(a,b){if(!a)throw new ReferenceError('this hasn\'t been initialised - super() hasn\'t been called');return b&&('object'==typeof b||'function'==typeof b)?b:a}function _inherits(a,b){if('function'!=typeof b&&null!==b)throw new TypeError('Super expression must either be null or a function, not '+typeof b);a.prototype=Object.create(b&&b.prototype,{constructor:{value:a,enumerable:!1,writable:!0,configurable:!0}}),b&&(Object.setPrototypeOf?Object.setPrototypeOf(a,b):a.__proto__=b)}var DH_STATES=exports.DH_STATES={IDLE:'IDLE',SKIPPED:'SKIPPED',STARTED:'STARTED',DOWNLOADING:'DOWNLOADING',RETRY:'RETRY',PAUSED:'PAUSED',RESUMED:'RESUMED',STOPPED:'STOPPED',FINISHED:'FINISHED',FAILED:'FAILED'},DownloaderHelper=exports.DownloaderHelper=function(a){function b(a,c){var d=2<arguments.length&&void 0!==arguments[2]?arguments[2]:{};_classCallCheck(this,b);var e=_possibleConstructorReturn(this,(b.__proto__||Object.getPrototypeOf(b)).call(this,{captureRejections:!0}));return e.__validate(a,c)?(e.url=e.requestURL=a,e.state=DH_STATES.IDLE,e.__defaultOpts={body:null,retry:!1,method:'GET',headers:{},fileName:'',timeout:-1,override:!1,forceResume:!1,removeOnStop:!0,removeOnFail:!0,progressThrottle:1e3,httpRequestOptions:{},httpsRequestOptions:{},resumeIfFileExists:!1},e.__opts=Object.assign({},e.__defaultOpts),e.__pipes=[],e.__total=0,e.__downloaded=0,e.__progress=0,e.__retryCount=0,e.__states=DH_STATES,e.__promise=null,e.__request=null,e.__response=null,e.__isResumed=!1,e.__isResumable=!1,e.__isRedirected=!1,e.__destFolder=c,e.__statsEstimate={time:0,bytes:0,prevBytes:0,throttleTime:0},e.__fileName='',e.__filePath='',e.updateOptions(d),e):_possibleConstructorReturn(e)}return _inherits(b,a),_createClass(b,[{key:'start',value:function c(){var a=this,b=function(){return new Promise(function(b,c){a.__promise={resolve:b,reject:c},a.__start()})};return this.__opts.resumeIfFileExists&&this.state!==this.__states.RESUMED?this.getTotalSize().then(function(c){var d=c.name,e=c.total,f=a.__opts.override;if(a.__opts.override=!0,a.__filePath=a.__getFilePath(d),a.__opts.override=f,a.__filePath&&fs.existsSync(a.__filePath)){var g=a.__getFilesizeInBytes(a.__filePath);return g===e?b():a.resumeFromFile(a.__filePath,{total:e,fileName:d})}return b()}):b()}},{key:'pause',value:function b(){var a=this;return this.state===this.__states.STOPPED?Promise.resolve(!0):(this.__requestAbort(),this.__response&&(this.__response.unpipe(),this.__pipes.forEach(function(a){return a.stream.unpipe()})),this.__fileStream&&this.__fileStream.removeAllListeners(),this.__closeFileStream().then(function(){return a.__setState(a.__states.PAUSED),a.emit('pause'),!0}))}},{key:'resume',value:function a(){if(this.state!==this.__states.STOPPED)return this.__setState(this.__states.RESUMED),this.__isResumable&&(this.__isResumed=!0,this.__options.headers.range='bytes='+this.__downloaded+'-'),this.emit('resume',this.__isResumed),this.__start()}},{key:'stop',value:function c(){var a=this;if(this.state===this.__states.STOPPED)return Promise.resolve(!0);var b=function(){return new Promise(function(b,c){fs.access(a.__filePath,function(d){return d?(a.__emitStop(),b(!0)):void fs.unlink(a.__filePath,function(d){return d?(a.__setState(a.__states.FAILED),a.emit('error',d),c(d)):void(a.__emitStop(),b(!0))})})})};return this.__requestAbort(),this.__closeFileStream().then(function(){return a.__opts.removeOnStop?b():(a.__emitStop(),Promise.resolve(!0))})}},{key:'pipe',value:function c(a){var b=1<arguments.length&&void 0!==arguments[1]?arguments[1]:null;return this.__pipes.push({stream:a,options:b}),a}},{key:'unpipe',value:function d(){var a=this,b=0<arguments.length&&void 0!==arguments[0]?arguments[0]:null,c=function(b){return a.__response?a.__response.unpipe(b):b.unpipe()};if(b){var e=this.__pipes.find(function(a){return a.stream===b});return void(e&&(c(b),this.__pipes=this.__pipes.filter(function(a){return a.stream!==b})))}this.__pipes.forEach(function(a){return c(a.stream)}),this.__pipes=[]}},{key:'getDownloadPath',value:function a(){return this.__filePath}},{key:'isResumable',value:function a(){return this.__isResumable}},{key:'updateOptions',value:function b(a){this.__opts=Object.assign({},this.__opts,a),this.__headers=this.__opts.headers,-1<this.__opts.timeout&&(this.__opts.httpRequestOptions.timeout=this.__opts.timeout,this.__opts.httpsRequestOptions.timeout=this.__opts.timeout),('number'!=typeof this.__opts.progressThrottle||0>this.__opts.progressThrottle)&&(this.__opts.progressThrottle=this.__defaultOpts.progressThrottle),this.__options=this.__getOptions(this.__opts.method,this.url,this.__opts.headers),this.__initProtocol(this.url)}},{key:'getStats',value:function a(){return{total:this.__total,name:this.__fileName,downloaded:this.__downloaded,progress:this.__progress,speed:this.__statsEstimate.bytes}}},{key:'getTotalSize',value:function c(){var a=this,b=Object.assign({},this.__headers);return b.hasOwnProperty('range')&&delete b.range,new Promise(function(c,d){var e=function(f,g){var h=a.__protocol.request(g,function(g){if(a.__isRequireRedirect(g)){var h=/^https?:\/\//.test(g.headers.location)?g.headers.location:new _url.URL(g.headers.location,f).href;return e(h,a.__getOptions('HEAD',h,b))}return 200===g.statusCode?void c({name:a.__getFileNameFromHeaders(g.headers,g),total:parseInt(g.headers['content-length'])||null}):d(new Error('Response status was '+g.statusCode))});h.on('error',function(a){return d(a)}),h.on('timeout',function(){return d(new Error('timeout'))}),h.on('uncaughtException',function(a){return d(a)}),h.end()};e(a.url,a.__getOptions('HEAD',a.url,b))})}},{key:'getResumeState',value:function a(){return{downloaded:this.__downloaded,filePath:this.__filePath,fileName:this.__fileName,total:this.__total}}},{key:'resumeFromFile',value:function d(a){var b=this,c=1<arguments.length&&void 0!==arguments[1]?arguments[1]:{};return this.__opts.override=!0,this.__filePath=a,(c.total&&c.fileName?Promise.resolve({name:c.fileName,total:c.total}):this.getTotalSize()).then(function(a){var d=a.name,e=a.total;return b.__total=c.total||e,b.__fileName=c.fileName||d,b.__downloaded=c.downloaded||b.__getFilesizeInBytes(b.__filePath),b.__options.headers.range='bytes='+b.__downloaded+'-',b.__isResumed=!0,b.__isResumable=!0,b.__setState(b.__states.RESUMED),b.emit('resume',b.__isResumed),new Promise(function(a,c){b.__promise={resolve:a,reject:c},b.__start()})})}},{key:'__start',value:function a(){this.__isRedirected||this.state===this.__states.RESUMED||(this.emit('start'),this.__setState(this.__states.STARTED)),this.__response=null,this.__request=this.__downloadRequest(this.__promise.resolve,this.__promise.reject),this.__request.on('error',this.__onError(this.__promise.resolve,this.__promise.reject)),this.__request.on('timeout',this.__onTimeout(this.__promise.resolve,this.__promise.reject)),this.__request.on('uncaughtException',this.__onError(this.__promise.resolve,this.__promise.reject,!0)),this.__opts.body&&this.__request.write(this.__opts.body),this.__request.end()}},{key:'__resolvePending',value:function b(){if(this.__promise){var a=this.__promise.resolve;return this.__promise=null,a(!0)}}},{key:'__downloadRequest',value:function d(a,b){var c=this;return this.__protocol.request(this.__options,function(d){if(c.__response=d,c.__isResumed||(c.__total=parseInt(d.headers['content-length'])||null,c.__resetStats()),c.__isRequireRedirect(d)){var e=/^https?:\/\//.test(d.headers.location)?d.headers.location:new _url.URL(d.headers.location,c.url).href;return c.__isRedirected=!0,c.__initProtocol(e),c.__start()}if(200!==d.statusCode&&206!==d.statusCode){var f=new Error('Response status was '+d.statusCode);return f.status=d.statusCode||0,f.body=d.body||'',c.__setState(c.__states.FAILED),c.emit('error',f),b(f)}c.__opts.forceResume?c.__isResumable=!0:d.headers.hasOwnProperty('accept-ranges')&&'none'!==d.headers['accept-ranges']&&(c.__isResumable=!0),c.__startDownload(d,a,b)})}},{key:'__startDownload',value:function h(a,b,c){var d=this,e=a;if(!this.__isResumed){var i=this.__getFileNameFromHeaders(a.headers);if(this.__filePath=this.__getFilePath(i),this.__fileName=this.__filePath.split(path.sep).pop(),fs.existsSync(this.__filePath)){var f=this.__getFilesizeInBytes(this.__filePath),g=this.__total?this.__total:0;if('object'===_typeof(this.__opts.override)&&this.__opts.override.skip&&(this.__opts.override.skipSmaller||f>=g))return this.emit('skip',{totalSize:this.__total,fileName:this.__fileName,filePath:this.__filePath,downloadedSize:f}),this.__setState(this.__states.SKIPPED),b(!0)}this.__fileStream=fs.createWriteStream(this.__filePath,{})}else this.__fileStream=fs.createWriteStream(this.__filePath,{flags:'a'});this.emit('download',{fileName:this.__fileName,filePath:this.__filePath,totalSize:this.__total,isResumed:this.__isResumed,downloadedSize:this.__downloaded}),this.__retryCount=0,this.__isResumed=!1,this.__isRedirected=!1,this.__setState(this.__states.DOWNLOADING),this.__statsEstimate.time=new Date,this.__statsEstimate.throttleTime=new Date,e.on('data',function(a){return d.__calculateStats(a.length)}),this.__pipes.forEach(function(a){e.pipe(a.stream,a.options),e=a.stream}),e.pipe(this.__fileStream),e.on('error',this.__onError(b,c)),this.__fileStream.on('finish',this.__onFinished(b,c)),this.__fileStream.on('error',this.__onError(b,c))}},{key:'__hasFinished',value:function a(){return this.state!==this.__states.PAUSED&&this.state!==this.__states.STOPPED&&this.state!==this.__states.RETRY&&this.state!==this.__states.FAILED}},{key:'__isRequireRedirect',value:function b(a){return 300<a.statusCode&&400>a.statusCode&&a.headers.hasOwnProperty('location')&&a.headers.location}},{key:'__onFinished',value:function d(a,b){var c=this;return function(){c.__fileStream.close(function(d){return d?b(d):(c.__hasFinished()&&(c.__setState(c.__states.FINISHED),c.__pipes=[],c.emit('end',{fileName:c.__fileName,filePath:c.__filePath,totalSize:c.__total,incomplete:!!c.__total&&c.__downloaded!==c.__total,onDiskSize:c.__getFilesizeInBytes(c.__filePath),downloadedSize:c.__downloaded})),a(c.__downloaded===c.__total))})}}},{key:'__closeFileStream',value:function b(){var a=this;return this.__fileStream?new Promise(function(b,c){a.__fileStream.close(function(a){return a?c(a):b(!0)})}):Promise.resolve(!0)}},{key:'__onError',value:function e(a,b){var c=this,d=!!(2<arguments.length&&void 0!==arguments[2])&&arguments[2];return function(a){return c.__pipes=[],d&&c.__requestAbort(),c.state===c.__states.STOPPED||c.state===c.__states.FAILED?void 0:c.__opts.retry?c.__retry(a).catch(function(d){c.__removeFile().finally(function(){c.__setState(c.__states.FAILED),c.emit('error',d?d:a),b(d?d:a)})}):c.__removeFile().finally(function(){c.__setState(c.__states.FAILED),c.emit('error',a),b(a)})}}},{key:'__retry',value:function c(){var a=this,b=0<arguments.length&&void 0!==arguments[0]?arguments[0]:null;return this.__opts.retry?'object'===_typeof(this.__opts.retry)&&this.__opts.retry.hasOwnProperty('maxRetries')&&this.__opts.retry.hasOwnProperty('delay')?this.__retryCount>=this.__opts.retry.maxRetries?Promise.reject(b?b:new Error('reached the maximum retries')):(this.__retryCount++,this.__setState(this.__states.RETRY),this.emit('retry',this.__retryCount,this.__opts.retry,b),new Promise(function(b){return setTimeout(function(){return b(0<a.__downloaded?a.resume():a.__start())},a.__opts.retry.delay)})):Promise.reject(new Error('wrong retry options')):Promise.reject(b)}},{key:'__onTimeout',value:function d(a,b){var c=this;return function(){return c.__requestAbort(),c.__opts.retry?c.__retry(new Error('timeout')).catch(function(a){c.__removeFile().finally(function(){c.__setState(c.__states.FAILED),a?b(a):(c.emit('timeout'),b(new Error('timeout')))})}):c.__removeFile().finally(function(){c.__setState(c.__states.FAILED),c.emit('timeout'),b(new Error('timeout'))})}}},{key:'__resetStats',value:function a(){this.__retryCount=0,this.__downloaded=0,this.__progress=0,this.__statsEstimate={time:0,bytes:0,prevBytes:0,throttleTime:0}}},{key:'__getFileNameFromHeaders',value:function k(a,b){var c='',d=/.*filename\*=.*?'.*?'([^"].+?[^"])(?:(?:;)|$)/i,e=/.*filename="(.*?)";?/i,f=/.*filename=([^"].+?[^"])(?:(?:;)|$)/i,g=a.hasOwnProperty('content-disposition'),h=g?a['content-disposition'].match(d):null,i=!g||h?null:a['content-disposition'].match(e),j=!g||h||i?null:a['content-disposition'].match(f);return g&&(h||i||j)?(c=a['content-disposition'],c=c.trim(),h?c=h[1]:i?c=i[1]:j&&(c=j[1]),c=c.replace(/[/\\]/g,'')):0<path.basename(new _url.URL(this.requestURL).pathname).length?c=path.basename(new _url.URL(this.requestURL).pathname):c=new _url.URL(this.requestURL).hostname+'.html',this.__opts.fileName?this.__getFileNameFromOpts(c,b):c.replace(/\.*$/,'')}},{key:'__getFilePath',value:function d(a){var b=path.join(this.__destFolder,a),c=b;return this.__opts.override||this.state===this.__states.RESUMED||(c=this.__uniqFileNameSync(c),b!==c&&this.emit('renamed',{path:c,fileName:c.split(path.sep).pop(),prevPath:b,prevFileName:b.split(path.sep).pop()})),c}},{key:'__getFileNameFromOpts',value:function g(a,b){if(!this.__opts.fileName)return a;if('string'==typeof this.__opts.fileName)return this.__opts.fileName;if('function'==typeof this.__opts.fileName){var h=path.join(this.__destFolder,a);return b&&b.headers||this.__response&&this.__response.headers?this.__opts.fileName(a,h,(b?b:this.__response).headers['content-type']):this.__opts.fileName(a,h)}if('object'===_typeof(this.__opts.fileName)){var c=this.__opts.fileName,d=c.name,e=!!c.hasOwnProperty('ext')&&c.ext;if('string'==typeof e)return d+'.'+e;if('boolean'==typeof e){if(e)return d;var f=a.includes('.')?a.split('.').pop():'';return''===f?d:d+'.'+f}}return a}},{key:'__calculateStats',value:function f(a){var b=new Date,c=b-this.__statsEstimate.time,d=b-this.__statsEstimate.throttleTime,e=this.__total||0;a&&(this.__downloaded+=a,this.__progress=0===e?0:100*(this.__downloaded/e),(this.__downloaded===e||1e3<c)&&(this.__statsEstimate.time=b,this.__statsEstimate.bytes=this.__downloaded-this.__statsEstimate.prevBytes,this.__statsEstimate.prevBytes=this.__downloaded),(this.__downloaded===e||d>this.__opts.progressThrottle)&&(this.__statsEstimate.throttleTime=b,this.emit('progress.throttled',this.getStats())),this.emit('progress',this.getStats()))}},{key:'__setState',value:function b(a){this.state=a,this.emit('stateChanged',this.state)}},{key:'__getOptions',value:function f(a,b){var c=2<arguments.length&&void 0!==arguments[2]?arguments[2]:{},d=new _url.URL(b),e={protocol:d.protocol,host:d.hostname,port:d.port,path:d.pathname+d.search,method:a};return c&&(e.headers=c),e}},{key:'__getFilesizeInBytes',value:function d(a){try{var b=fs.statSync(a,{throwIfNoEntry:!1}),c=b.size||0;return c}catch(a){this.emit('warning',a)}return 0}},{key:'__validate',value:function d(a,b){if('string'!=typeof a)throw new Error('URL should be an string');if(!a)throw new Error('URL couldn\'t be empty');if('string'!=typeof b)throw new Error('Destination Folder should be an string');if(!b)throw new Error('Destination Folder couldn\'t be empty');if(!fs.existsSync(b))throw new Error('Destination Folder must exist');var c=fs.statSync(b);if(!c.isDirectory())throw new Error('Destination Folder must be a directory');try{fs.accessSync(b,fs.constants.W_OK)}catch(a){throw new Error('Destination Folder must be writable')}return!0}},{key:'__initProtocol',value:function c(a){var b=this.__getOptions(this.__opts.method,a,this.__headers);this.requestURL=a,-1<a.indexOf('https://')?(this.__protocol=https,this.__options=Object.assign({},b,this.__opts.httpsRequestOptions)):(this.__protocol=http,this.__options=Object.assign({},b,this.__opts.httpRequestOptions))}},{key:'__uniqFileNameSync',value:function f(a){if('string'!=typeof a||''===a)return a;try{fs.accessSync(a,fs.F_OK);var b=a.match(/(.*)(\([0-9]+\))(\..*)$/),c=b?b[1].trim():a,d=b?parseInt(b[2].replace(/\(|\)/,'')):0,e=a.split('.').pop();return e!==a&&0<e.length?(e='.'+e,c=c.replace(e,'')):e='',this.__uniqFileNameSync(c+' ('+ ++d+')'+e)}catch(b){return a}}},{key:'__removeFile',value:function b(){var a=this;return new Promise(function(b){return a.__fileStream?void a.__fileStream.close(function(c){return c&&a.emit('warning',c),a.__opts.removeOnFail?fs.access(a.__filePath,function(d){return d?b():void fs.unlink(a.__filePath,function(d){d&&a.emit('warning',c),b()})}):void b()}):b()})}},{key:'__requestAbort',value:function a(){this.__response&&this.__response.destroy(),this.__request&&(this.__request.destroy?this.__request.destroy():this.__request.abort())}},{key:'__emitStop',value:function a(){this.__resolvePending(),this.__setState(this.__states.STOPPED),this.emit('stop')}}]),b}(_events.EventEmitter);
+
+/***/ }),
+
 /***/ 467:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -60451,39 +60459,92 @@ const path = __nccwpck_require__(1017);
 const os = __nccwpck_require__(2037);
 const fs = __nccwpck_require__(7147);
 const base64 = __nccwpck_require__(5848);
+const { DownloaderHelper } = __nccwpck_require__(5775);
 
-const cache_key = base64.encode(core.getInput('laz-url') + core.getInput('fpc-url'))
-const installer_dir = path.join(process.env['RUNNER_TEMP'], 'installers')
+function installersLocation() {
 
-async function restore_installers() {
-
-    await exec.exec('mkdir -p ' + installer_dir);
-    await cache.restoreCache([installer_dir], cache_key) != null;
+	return path.join(process.env['RUNNER_TEMP'], 'installers'); 
 }
 
-async function check_installer(filename) {
+function installedLocation() {
 
-    if (fs.existsSync(filename) && (fs.statSync(filename).size == 0)) {
-        fs.unlinkSync(filename);
+	switch (os.platform()) {
+        case 'linux':
+            return '';
+            break;
+
+        case 'win32':
+            return path.join(process.env['RUNNER_TEMP'], 'lazarus');
+            break;
+
+        case 'darwin':
+            return '/Applications/Lazarus/';
+            break;
     }
-
-    return fs.existsSync(filename);
 }
 
-async function download_installer(url) {
+function useCache() {
 
-    filename = path.join(installer_dir, path.basename(url));
+	return core.getInput('use-cache').toUpperCase() == 'TRUE';
+}
 
-    if (await check_installer(filename) == false) {
-        await exec.exec('curl --progress-bar -L -o "' + filename + '" ' + url);
+function lazURL() {
 
-        if (await check_installer(filename)) {
-            core.exportVariable('SAVE_CACHE_DIR', installer_dir);
-            core.exportVariable('SAVE_CACHE_KEY', cache_key);
-        }
-    }
+	return core.getInput('laz-url').split(os.EOL);
+}
 
-    return filename;
+function fpcURL() {
+
+	return core.getInput('fpc-url').split(os.EOL);
+}
+
+function cacheKey() {
+
+	return base64.encode(core.getInput('laz-url') + '-' + core.getInput('fpc-url'));
+}
+
+
+function sleep(millis) {
+
+    return new Promise(resolve => setTimeout(resolve, millis));
+}
+
+async function downloadInstaller(url) {
+
+	success = false
+
+	options = {
+		fileName: { name: path.basename(url), ext: true }, 
+		retry: { maxRetries: 5, delay: 3000 }, 
+		override: true 
+	}
+
+	console.log('Downloading: ' + url);
+	
+	for (var retry = 0; retry < 20; retry++) {
+		
+		console.log('Retry: ' + retry);
+		
+		dl = new DownloaderHelper(url, installersLocation(), options);
+		dl.on('error', (e) => { console.log('Download error: ' + e.status) });
+		dl.on("end",  () => { console.log('Download complete'); success = true });
+		dl.on('progress.throttled', (stats) => console.log('Download progress: ' + Math.round(stats.progress) + '%'));
+
+		try { 
+			await dl.start();
+		}
+		catch(err) { 
+		   console.log('Errored')
+		}
+		
+		if (success) {
+			break;
+		}
+		
+		await sleep(3000);
+	}
+	
+	return success;
 }
 
 async function install_macos(file) {
@@ -60527,17 +60588,24 @@ async function install_linux(file) {
 
 async function install_windows(file) {
 
-    await exec.exec(file + ' /VERYSILENT /DIR=' + path.join(process.env['RUNNER_TEMP'], 'lazarus'));
+    await exec.exec(file + ' /VERYSILENT /DIR=' + installedLocation());
 }
 
-async function install(url) {
+async function install(url, download) {
 
     if (url == '') {
         return
     }
 
-    filename = await download_installer(url);
-
+	filename = path.join(installersLocation(), path.basename(url));
+	
+	if (download) {
+		const downloaded = await downloadInstaller(url);
+		if (!downloaded) {
+			throw new Error('Failed to download: ' + url);
+		}	
+	}
+	
     switch (os.platform()) {
         case 'linux':
             await install_linux(filename);
@@ -60556,28 +60624,29 @@ async function install(url) {
 async function run() {
 
     try {
+    	await exec.exec('mkdir -p ' + installersLocation());
+        
         if (os.platform() == 'linux') {
             await exec.exec('sudo apt-get update');
+        }   	
+        
+        var cacheLoaded = false;
+        if (useCache()) {
+			cacheLoaded = await cache.restoreCache([installersLocation()], cacheKey()) != null;
+			if (!cacheLoaded) {
+				core.exportVariable('SAVE_CACHE_DIR', installersLocation());
+    			core.exportVariable('SAVE_CACHE_KEY', cacheKey());
+			}
+		}
+
+        for (const url of fpcURL()) {
+            await install(url, cacheLoaded == false);
+        }
+        for (const url of lazURL()) {
+            await install(url, cacheLoaded == false);
         }
 
-        await restore_installers()
-
-        for (const url of core.getInput('fpc-url').split(os.EOL)) {
-            await install(url);
-        }
-        for (const url of core.getInput('laz-url').split(os.EOL)) {
-            await install(url);
-        }
-
-        switch (os.platform()) {
-            case 'win32':
-                core.addPath(path.join(process.env['RUNNER_TEMP'], 'lazarus'));
-                break;
-
-            case 'darwin':
-                core.addPath('/Applications/Lazarus');
-                break;
-        }
+		core.addPath(installedLocation());
     } catch (error) {
         core.setFailed(error.message);
     }

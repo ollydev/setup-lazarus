@@ -39,7 +39,7 @@ jobs:
             laz-url: https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20x86-64/Lazarus%202.2.2/Lazarus-2.2.2-0-x86_64-macosx.pkg
             fpc-url: |
               https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20x86-64/Lazarus%202.2.2/fpc-3.2.2.intelarm64-macosx.dmg
-              https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20x86-64/Lazarus%202.2.2/fpc-src-3.2.2-20210709-macosx.dmg
+              https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20x86-64/Lazarus%202.2.2/fpc-src-3.2.2-20210709-macosx.dmg 
         
     steps:
       - uses: actions/checkout@v3.0.2
