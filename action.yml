@@ -9,7 +9,7 @@ inputs:
   fpc-url: 
     required: false
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index/index.js'
   post: 'dist/post/index.js'
   post-if: success() && env.SAVE_CACHE_KEY != ''  
