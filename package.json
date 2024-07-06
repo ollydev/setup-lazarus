@@ -18,13 +18,11 @@
   },
   "homepage": "https://github.com/ollydev/setup-lazarus#readme",
   "dependencies": {
-    "@actions/cache": "^2.0.5",
-    "@actions/core": "^1.8.2",
+    "@actions/cache": "^3.2.4",
     "@actions/exec": "^1.1.1",
     "@actions/tool-cache": "^2.0.1",
     "base-64": "^1.0.0",
-    "fs": "0.0.1-security",
-    "node-downloader-helper": "^2.1.1",
+    "fs": "^0.0.1-security",
     "os": "^0.1.2",
     "path": "^0.12.7",
     "process": "^0.11.10"

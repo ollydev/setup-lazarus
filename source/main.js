@@ -6,7 +6,7 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs');
 const base64 = require('base-64');
-const { DownloaderHelper } = require('node-downloader-helper');
+const tc = require('@actions/tool-cache');
 
 function installersLocation() {
 
@@ -48,50 +48,6 @@ function fpcURL() {
 function cacheKey() {
 
 	return base64.encode(core.getInput('laz-url') + '-' + core.getInput('fpc-url'));
-}
-
-
-function sleep(millis) {
-
-    return new Promise(resolve => setTimeout(resolve, millis));
-}
-
-async function downloadInstaller(url) {
-
-	success = false
-
-	options = {
-		fileName: { name: path.basename(url), ext: true }, 
-		retry: { maxRetries: 5, delay: 3000 }, 
-		override: true 
-	}
-
-	console.log('Downloading: ' + url);
-	
-	for (var retry = 0; retry < 20; retry++) {
-		
-		console.log('Retry: ' + retry);
-		
-		dl = new DownloaderHelper(url, installersLocation(), options);
-		dl.on('error', (e) => { console.log('Download error: ' + e.status) });
-		dl.on("end",  () => { console.log('Download complete'); success = true });
-		dl.on('progress.throttled', (stats) => console.log('Download progress: ' + Math.round(stats.progress) + '%'));
-
-		try { 
-			await dl.start();
-		}
-		catch(err) { 
-		   console.log('Errored')
-		}
-		
-		if (success) {
-			break;
-		}
-		
-		await sleep(3000);
-	}
-	
-	return success;
 }
 
 async function install_macos(file) {
@@ -147,8 +103,7 @@ async function install(url, download) {
 	filename = path.join(installersLocation(), path.basename(url));
 	
 	if (download) {
-		const downloaded = await downloadInstaller(url);
-		if (!downloaded) {
+		if (!await tc.downloadTool(url, filename)) {
 			throw new Error('Failed to download: ' + url);
 		}	
 	}
