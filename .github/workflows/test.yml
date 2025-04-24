@@ -42,7 +42,7 @@ jobs:
               https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20x86-64/Lazarus%202.2.2/fpc-src-3.2.2-20210709-macosx.dmg 
         
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v4.2.2
       
       - name: Install Lazarus
         uses: ./
