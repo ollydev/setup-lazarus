@@ -1,3 +1,7 @@
+// npm install
+// npm-check-updates
+// npm run build && git add -A && git commit --amend -m "dev" && git push -f
+
 const core = require('@actions/core');
 const exec = require("@actions/exec");
 const cache = require('@actions/cache');
