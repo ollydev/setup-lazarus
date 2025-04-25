@@ -78714,14 +78714,15 @@ const fs = __nccwpck_require__(9896);
 const base64 = __nccwpck_require__(3);
 const tc = __nccwpck_require__(3472);
 
-function installersLocation() {
-
-	return path.join(main_process.env['RUNNER_TEMP'], 'installers'); 
+function installersLocation()
+{
+    return path.join(main_process.env['RUNNER_TEMP'], 'installers');
 }
 
-function installedLocation() {
-
-	switch (os.platform()) {
+function installedLocation()
+{
+    switch (os.platform())
+    {
         case 'linux':
             return '';
             break;
@@ -78731,90 +78732,113 @@ function installedLocation() {
             break;
 
         case 'darwin':
-            return '/Applications/Lazarus/';
+            return path.join(main_process.env['RUNNER_TEMP'], 'lazarus');
             break;
     }
 }
 
-function useCache() {
-
-	return core.getInput('use-cache').toUpperCase() == 'TRUE';
+function useCache()
+{
+    return core.getInput('use-cache').toUpperCase() == 'TRUE';
 }
 
-function lazURL() {
-
-	return core.getInput('laz-url').split(os.EOL);
+function lazURL()
+{
+    return core.getInput('laz-url').split(os.EOL);
 }
 
-function fpcURL() {
-
-	return core.getInput('fpc-url').split(os.EOL);
+function fpcURL()
+{
+    return core.getInput('fpc-url').split(os.EOL);
 }
 
-function cacheKey() {
-
-	return base64.encode(core.getInput('laz-url') + '-' + core.getInput('fpc-url'));
+function cacheKey()
+{
+    return base64.encode(core.getInput('laz-url') + '-' + core.getInput('fpc-url'));
 }
 
-async function install_macos(file) {
-
-    function checkmount(file) {
+async function install_macos(file)
+{
+    function checkmount(file)
+    {
         return (file.toLowerCase().startsWith('lazarus') || file.toLowerCase().startsWith('fpc'))
     }
 
-    function checkpkg(file) {
+    function checkpkg(file)
+    {
         return (file.toLowerCase().startsWith('lazarus') || file.toLowerCase().startsWith('fpc')) && (file.endsWith('.pkg') || file.endsWith('.mpkg'))
     }
 
-    switch (path.extname(file)) {
+    switch (path.extname(file))
+    {
         case '.dmg':
             await exec.exec('sudo hdiutil attach ' + file);
 
             var mounts = fs.readdirSync('/Volumes/').filter(checkmount);
-            for (const mount of mounts) {
+            for (const mount of mounts)
+            {
                 var pkgs = fs.readdirSync('/Volumes/' + mount).filter(checkpkg);
-                for (const pkg of pkgs) {
+                for (const pkg of pkgs)
+                {
                     await exec.exec('sudo installer -package "' + path.join('/Volumes/', mount, pkg) + '" -target /');
                 }
             }
-			
-			for (const mount of mounts) {
-				await exec.exec('sudo hdiutil detach /Volumes/' + mount);			
+
+            for (const mount of mounts)
+            {
+                await exec.exec('sudo hdiutil detach /Volumes/' + mount);
             }
             break;
 
         case '.pkg':
             await exec.exec('sudo installer -package ' + file + ' -target /');
             break;
+
+        case '.zip':
+            await exec.exec('xattr -cr "' + file + '"');
+            await exec.exec('unzip -q "' + file + '" -d ' + main_process.env['RUNNER_TEMP']);
+
+            // update lazarus directory in config
+            var configFile = installedLocation() + '/config/environmentoptions.xml'
+            fs.writeFileSync(
+                configFile,
+                fs.readFileSync(configFile, { encoding: 'utf8', flag: 'r'}).replace('"/Developer/lazarus/"', '"' + installedLocation() + '"'),
+                { encoding: 'utf8', flag: 'w' }
+            );
+            break;
     }
 }
 
-async function install_linux(file) {
-
+async function install_linux(file)
+{
     await exec.exec('sudo apt install -y ' + file);
 }
 
 
-async function install_windows(file) {
-
+async function install_windows(file)
+{
     await exec.exec(file + ' /VERYSILENT /DIR=' + installedLocation());
 }
 
-async function install(url, download) {
-
-    if (url == '') {
+async function install(url, download)
+{
+    if (url == '')
+    {
         return
     }
 
-	filename = path.join(installersLocation(), path.basename(url));
-	
-	if (download) {
-		if (!await tc.downloadTool(url, filename)) {
-			throw new Error('Failed to download: ' + url);
-		}	
-	}
-	
-    switch (os.platform()) {
+    filename = path.join(installersLocation(), path.basename(url));
+
+    if (download)
+    {
+        if (!await tc.downloadTool(url, filename))
+        {
+            throw new Error('Failed to download: ' + url);
+        }
+    }
+
+    switch (os.platform())
+    {
         case 'linux':
             await install_linux(filename);
             break;
@@ -78829,33 +78853,41 @@ async function install(url, download) {
     }
 }
 
-async function run() {
+async function run()
+{
+    try
+    {
+        await exec.exec('mkdir -p ' + installersLocation());
 
-    try {
-    	await exec.exec('mkdir -p ' + installersLocation());
-        
-        if (os.platform() == 'linux') {
+        if (os.platform() == 'linux')
+        {
             await exec.exec('sudo apt-get update');
-        }   	
-        
+        }
+
         var cacheLoaded = false;
-        if (useCache()) {
-			cacheLoaded = await cache.restoreCache([installersLocation()], cacheKey()) != null;
-			if (!cacheLoaded) {
-				core.exportVariable('SAVE_CACHE_DIR', installersLocation());
-    			core.exportVariable('SAVE_CACHE_KEY', cacheKey());
-			}
-		}
-
-        for (const url of fpcURL()) {
-            await install(url, cacheLoaded == false);
-        }
-        for (const url of lazURL()) {
-            await install(url, cacheLoaded == false);
+        if (useCache())
+        {
+            cacheLoaded = await cache.restoreCache([installersLocation()], cacheKey()) != null;
+            if (!cacheLoaded)
+            {
+                core.exportVariable('SAVE_CACHE_DIR', installersLocation());
+                core.exportVariable('SAVE_CACHE_KEY', cacheKey());
+            }
         }
 
-		core.addPath(installedLocation());
-    } catch (error) {
+        for (const url of fpcURL())
+        {
+            await install(url, cacheLoaded == false);
+        }
+        for (const url of lazURL())
+        {
+            await install(url, cacheLoaded == false);
+        }
+
+        core.addPath(installedLocation());
+    }
+    catch (error)
+    {
         core.setFailed(error.message);
     }
 }
