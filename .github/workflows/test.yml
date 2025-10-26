@@ -41,7 +41,7 @@ jobs:
               https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20x86-64/Lazarus%203.8/fpc-3.2.2.intelarm64-macosx.dmg
         
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v5
       
       - name: Install Lazarus
         uses: ./
