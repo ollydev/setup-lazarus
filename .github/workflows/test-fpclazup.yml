@@ -1,0 +1,64 @@
+name: Test fpclazup
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  test:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        config:          
+          - os: windows-latest
+            name: Windows 64
+            args: ""
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-x86_64-win64.exe
+            fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
+            fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
+
+          - os: windows-latest
+            name: Windows 32
+            args: "--cpu=i386"
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-x86_64-win64.exe
+            fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
+            fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
+
+          - os: ubuntu-latest
+            name: Linux 64
+            args: ""
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-x86_64-linux
+            fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
+            fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
+
+          - os: macos-26
+            name: MacOS arm64
+            args: ""
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-aarch64-darwin
+            fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
+            fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
+            
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Lazarus
+        uses: ./
+        with:
+          fpclazup-url: ${{ matrix.config.fpclazup-url }}
+          fpclazup-fpccommit: ${{ matrix.config.fpclazup-fpccommit }}
+          fpclazup-lazcommit: ${{ matrix.config.fpclazup-lazcommit }}
+
+      - name: Build Test
+        run: lazbuild ${{ matrix.config.args }} test_lazarus.lpi
+
+      - name: Run Test
+        run: ./test

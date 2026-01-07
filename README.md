@@ -1,12 +1,11 @@
 [![Test](https://github.com/ollydev/setup-lazarus/actions/workflows/test.yml/badge.svg)](https://github.com/ollydev/setup-lazarus/actions/workflows/test.yml)
 
-Simple action which installs Lazarus and FPC from sourceforge releases.
+Github action which can install Lazarus (and FPC) from sourceforge releases or build using fpclazup.
 
-## Example usage
-
+----
+**Example using Lazarus SourceForge releases:**
 ```yml
 on: [push, pull_request]
-
 jobs:
   test:
     name: ${{ matrix.config.name }}
@@ -39,10 +38,8 @@ jobs:
             fpc-url: https://sourceforge.net/projects/lazarus/files/Lazarus macOS x86-64/Lazarus 4.2/fpc-3.2.2.intelarm64-macosx.dmg
         
     steps:
-      - uses: actions/checkout@v5
-      
       - name: Install Lazarus
-        uses: ollydev/setup-lazarus@v2
+        uses: ollydev/setup-lazarus@v4
         with:
           laz-url: ${{ matrix.config.laz-url }}
           fpc-url: ${{ matrix.config.fpc-url }}
@@ -51,3 +48,59 @@ jobs:
         run: |
           lazbuild --version
 ```
+----
+**Example using fpclazup to build Lazarus and FPC:**
+```yml
+on: [push, pull_request]
+jobs:
+  test:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - os: windows-latest
+            name: Windows 64
+            args: ""
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-x86_64-win64.exe
+            fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
+            fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
+
+          - os: windows-latest
+            name: Windows 32
+            args: "--cpu=i386"
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-x86_64-win64.exe
+            fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
+            fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
+
+          - os: ubuntu-latest
+            name: Linux 64
+            args: ""
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-x86_64-linux
+            fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
+            fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
+
+          - os: macos-26
+            name: MacOS arm64
+            args: ""
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-aarch64-darwin
+            fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
+            fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
+        
+    steps:
+      - name: Install Lazarus
+        uses: ollydev/setup-lazarus@v4
+        with:
+          fpclazup-url: ${{ matrix.config.fpclazup-url }}
+          fpclazup-lazcommit: ${{ matrix.config.fpclazup-lazcommit }}
+          fpclazup-fpccommit: ${{ matrix.config.fpclazup-fpccommit }}
+      
+      - name: Test Installation
+        run: |
+          lazbuild --version
+```
+
