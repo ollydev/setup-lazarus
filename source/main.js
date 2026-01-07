@@ -12,6 +12,16 @@ const fs = require('fs');
 const base64 = require('base-64');
 const tc = require('@actions/tool-cache');
 
+function unixify(s) 
+{
+    return s.split(path.sep).join(path.posix.sep);
+}
+
+function is_git_sha(hash) 
+{
+    return /^[0-9a-f]{7,40}$/i.test(hash)
+}
+
 function installersLocation()
 {
     return path.join(process.env['RUNNER_TEMP'], 'installers');
@@ -112,7 +122,6 @@ async function install_linux(file)
     await exec.exec('sudo apt install -y ' + file);
 }
 
-
 async function install_windows(file)
 {
     await exec.exec(file + ' /VERYSILENT /DIR=' + installedLocation());
@@ -151,16 +160,11 @@ async function install(url, download)
     }
 }
 
-async function run()
+async function sourceForge()
 {
     try
     {
         await exec.exec('mkdir -p ' + installersLocation());
-
-        if (os.platform() == 'linux')
-        {
-            await exec.exec('sudo apt-get update');
-        }
 
         var cacheLoaded = false;
         if (useCache())
@@ -190,4 +194,120 @@ async function run()
     }
 }
 
-run();
+async function fpcLazUp()
+{
+    try
+    {
+        const lazCommit = core.getInput('fpclazup-lazcommit');
+        if (!is_git_sha(lazCommit))
+        {
+            throw new Error("Laz commit SHA required"); 
+        }
+
+        const fpcCommit = core.getInput('fpclazup-fpccommit');
+        if (!is_git_sha(fpcCommit))
+        {
+            throw new Error("FPC commit SHA required"); 
+        }
+        
+        const fpcLazupUrl = core.getInput('fpclazup-url');
+        if (!fpcLazupUrl.includes("fpclazup-"))
+        {
+            throw new Error("Require fpclazup not fpcup (aka only FPC!!)"); 
+        }
+
+        const fpcLazupFile = unixify(path.join(process.env['RUNNER_TEMP'], 'fpclazupbin') + (process.platform === 'win32' ? '.exe' : ''));    
+        const installDir = unixify(path.join(process.env['RUNNER_TEMP'], 'fpclazup') + '/');
+        const cacheKey = process.env['ImageOS'] + ' ' + fpcLazupUrl + ' ' + fpcCommit + lazCommit;
+        const cacheLoaded = await cache.restoreCache([installDir], cacheKey) != null;
+        if (!cacheLoaded)
+        {
+            await exec.exec('mkdir', [ 
+                '-p', 
+                installDir
+            ]);
+
+            // get fpc
+            await exec.exec('git', [ 
+                'clone', 
+                'https://gitlab.com/freepascal.org/fpc/source', 
+                installDir + 'fpc'
+            ]);
+            await exec.exec('git', [ 
+                '-C', 
+                installDir + 'fpc', 
+                'checkout', 
+                fpcCommit
+            ]);
+
+            // get lazarus
+            await exec.exec('git', [ 
+                'clone', 
+                'https://gitlab.com/freepascal.org/lazarus/lazarus', 
+                installDir + 'lazarus'
+            ]);
+
+            await exec.exec('git', [ 
+                '-C', 
+                installDir + 'lazarus', 
+                'checkout', 
+                lazCommit
+            ]);
+
+            if (!await tc.downloadTool(fpcLazupUrl, fpcLazupFile))
+            {
+                throw new Error('Failed to download: ' + fpcLazupUrl);
+            }
+
+            await exec.exec('chmod', [ 
+                '+x', 
+                fpcLazupFile
+            ]);
+            
+            await exec.exec(fpcLazupFile, [ 
+                '--only=FPCCleanOnly,FPCBuildOnly,LazarusCleanOnly,LazBuild,LazarusConfigOnly', 
+                '--noconfirm', 
+                '--verbose', 
+                '--installdir=' + installDir
+            ]);  
+            
+            // on windows install 32bit cross compiler
+            if (process.platform == 'win32')
+            {
+                await exec.exec(fpcLazupFile, [ 
+                    '--only=FPCCleanOnly,FPCBuildOnly', 
+                    '--ostarget=win32', 
+                    '--cputarget=i386',
+                    '--autotools',
+                    '--noconfirm', 
+                    '--verbose', 
+                    '--installdir=' + installDir
+                ]); 
+            }
+
+            core.exportVariable('SAVE_CACHE_DIR', installDir);
+            core.exportVariable('SAVE_CACHE_KEY', cacheKey);
+        }
+        core.addPath(path.join(installDir, 'lazarus'));
+    }
+    catch (error)
+    {
+        core.setFailed(error.message);
+    }
+}
+
+if (os.platform() == 'linux')
+{
+    exec.exec('sudo apt-get update');
+}
+
+if (core.getInput('fpclazup-url'))
+{ 
+    core.info("Mode: fpclazup");
+    fpcLazUp();
+}
+else
+{
+    core.info("Mode: sourceforge");
+    sourceForge();
+}

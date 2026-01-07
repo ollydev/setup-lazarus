@@ -5,13 +5,17 @@ inputs:
     required: false
     default: 'true'
   laz-url: 
-    required: true
+    required: false
   fpc-url: 
     required: false
+  fpclazup-url:
+    required: false
+  fpclazup-fpccommit:
+    required: false  
+  fpclazup-lazcommit:
+    required: false    
 runs:
   using: 'node20'
   main: 'dist/index/index.js'
   post: 'dist/post/index.js'
-  post-if: success() && env.SAVE_CACHE_KEY != ''  
-  
-
+  post-if: success() && env.SAVE_CACHE_KEY != ''
