@@ -1,6 +1,4 @@
-[![Test](https://github.com/ollydev/setup-lazarus/actions/workflows/test.yml/badge.svg)](https://github.com/ollydev/setup-lazarus/actions/workflows/test.yml)
-
-Github action which can install Lazarus (and FPC) from sourceforge releases or build using fpclazup.
+Github action which can install Lazarus from official sourceforge releases or build custom versions using [fpclazup]([https://github.com/LongDirtyAnimAlf/Reiniero-fpcup).
 
 ----
 **Example using Lazarus SourceForge releases:**
