@@ -2,15 +2,17 @@
 // npm-check-updates
 // npm run build && git add -A && git commit --amend -m "dev" && git push -f
 
-const core = require('@actions/core');
-const exec = require("@actions/exec");
-const cache = require('@actions/cache');
-const process = require('process');
-const path = require('path');
-const os = require('os');
-const fs = require('fs');
-const base64 = require('base-64');
-const tc = require('@actions/tool-cache');
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+import * as cache from '@actions/cache';
+import * as tc from '@actions/tool-cache';
+
+import process from 'process';
+import path from 'path';
+import os from 'os';
+import fs from 'fs';
+
+import base64 from 'base-64';
 
 function unixify(s) 
 {

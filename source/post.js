@@ -1,6 +1,6 @@
-const core = require('@actions/core');
-const cache = require('@actions/cache');
-const process = require('process');
+import * as core from '@actions/core';
+import * as cache from '@actions/cache';
+import process from 'process';
 
 async function run() {
     try {
