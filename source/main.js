@@ -12,8 +12,6 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
-import base64 from 'base-64';
-
 function unixify(s) 
 {
     return s.split(path.sep).join(path.posix.sep);
@@ -35,15 +33,12 @@ function installedLocation()
     {
         case 'linux':
             return '';
-            break;
 
         case 'win32':
             return path.join(process.env['RUNNER_TEMP'], 'lazarus');
-            break;
 
         case 'darwin':
             return path.join(process.env['RUNNER_TEMP'], 'lazarus');
-            break;
     }
 }
 
@@ -52,19 +47,30 @@ function useCache()
     return core.getInput('use-cache').toUpperCase() == 'TRUE';
 }
 
+function debugBuild()
+{
+    return core.getInput('debug-build').toUpperCase() == 'TRUE';
+}
+
 function lazURL()
 {
-    return core.getInput('laz-url').split(os.EOL);
+    return core.getInput('laz-url').split(/\r?\n/);
 }
 
 function fpcURL()
 {
-    return core.getInput('fpc-url').split(os.EOL);
+    return core.getInput('fpc-url').split(/\r?\n/);
+}
+
+function urlTail(url)
+{
+    // last 3 path segments
+    return url.split('/').slice(-3).join('/');
 }
 
 function cacheKey()
 {
-    return base64.encode(core.getInput('laz-url') + '-' + core.getInput('fpc-url'));
+    return [...lazURL(), ...fpcURL()].filter(Boolean).map(urlTail).join('-');
 }
 
 async function install_macos(file)
@@ -136,7 +142,7 @@ async function install(url, download)
         return
     }
 
-    filename = path.join(installersLocation(), path.basename(url));
+    const filename = path.join(installersLocation(), path.basename(url.replace(/\/download\/?$/, '')));
 
     if (download)
     {
@@ -181,18 +187,42 @@ async function sourceForge()
 
         for (const url of fpcURL())
         {
-            await install(url, cacheLoaded == false);
+            await install(url, !cacheLoaded);
         }
         for (const url of lazURL())
         {
-            await install(url, cacheLoaded == false);
+            await install(url, !cacheLoaded);
         }
 
-        core.addPath(installedLocation());
+        const installed = installedLocation();
+        if (installed)
+        {
+            core.addPath(installed);
+        }
     }
     catch (error)
     {
         core.setFailed(error.message);
+    }
+}
+
+async function runDsymutil(installDir)
+{
+    const binDir = path.join(installDir, 'fpc', 'bin');
+    if (!fs.existsSync(binDir))
+    {
+        return;
+    }
+
+    const compiler = os.arch() === 'arm64' ? 'ppca64' : 'ppcx64';
+
+    for (const target of fs.readdirSync(binDir))
+    {
+        const file = path.join(binDir, target, compiler);
+        if (fs.existsSync(file))
+        {
+            await exec.exec('dsymutil', [ file ]);
+        }
     }
 }
 
@@ -218,9 +248,11 @@ async function fpcLazUp()
             throw new Error("Require fpclazup not fpcup (aka only FPC!!)"); 
         }
 
-        const fpcLazupFile = unixify(path.join(process.env['RUNNER_TEMP'], 'fpclazupbin') + (process.platform === 'win32' ? '.exe' : ''));    
+        const fpcLazupFile = unixify(path.join(process.env['RUNNER_TEMP'], 'fpclazupbin') + (process.platform === 'win32' ? '.exe' : ''));
         const installDir = unixify(path.join(process.env['RUNNER_TEMP'], 'fpclazup') + '/');
-        const cacheKey = process.env['ImageOS'] + ' ' + fpcLazupUrl + ' ' + fpcCommit + lazCommit;
+
+        const debug = debugBuild();
+        const cacheKey = process.env['ImageOS'] + ' ' + urlTail(fpcLazupUrl) + ' ' + fpcCommit + ' ' + lazCommit + (debug ? ' debug' : '');
         const cacheLoaded = await cache.restoreCache([installDir], cacheKey) != null;
         if (!cacheLoaded)
         {
@@ -269,25 +301,34 @@ async function fpcLazUp()
                 ]);
             }
             
-            await exec.exec(fpcLazupFile, [ 
-                '--only=FPCCleanOnly,FPCBuildOnly,LazarusCleanOnly,LazBuild,LazarusConfigOnly', 
-                '--noconfirm', 
-                '--verbose', 
+            await exec.exec(fpcLazupFile, [
+                '--only=FPCCleanOnly,FPCBuildOnly,LazarusCleanOnly,LazBuild,LazarusConfigOnly',
+                debug ? '--fpcOPT=-g -gl -gw2' : '',
+                debug ? '--lazOPT=-g -gl -gw2' : '',
+                '--noconfirm',
+                '--verbose',
                 '--installdir=' + installDir
-            ]);  
+            ].filter(Boolean));
             
             // on windows install 32bit cross compiler
             if (process.platform == 'win32')
             {
-                await exec.exec(fpcLazupFile, [ 
-                    '--only=FPCCleanOnly,FPCBuildOnly', 
-                    '--ostarget=win32', 
+                await exec.exec(fpcLazupFile, [
+                    '--only=FPCCleanOnly,FPCBuildOnly',
+                    '--ostarget=win32',
                     '--cputarget=i386',
                     '--autotools',
-                    '--noconfirm', 
-                    '--verbose', 
+                    debug ? '--fpcOPT=-g -gl -gw2' : '',
+                    '--noconfirm',
+                    '--verbose',
                     '--installdir=' + installDir
-                ]); 
+                ].filter(Boolean));
+            }
+
+            // generate .dSYM on macOS debug builds
+            if (debug && process.platform === 'darwin')
+            {
+                await runDsymutil(installDir);
             }
 
             core.exportVariable('SAVE_CACHE_DIR', installDir);

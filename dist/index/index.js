@@ -2728,7 +2728,7 @@ var require_multipart = __commonJS({
           let parsed;
           let charset;
           let encoding;
-          let filename2;
+          let filename;
           let nsize = 0;
           if (header["content-type"]) {
             parsed = parseParams(header["content-type"][0]);
@@ -2757,9 +2757,9 @@ var require_multipart = __commonJS({
               if (RE_NAME.test(parsed[i][0])) {
                 fieldname = parsed[i][1];
               } else if (RE_FILENAME.test(parsed[i][0])) {
-                filename2 = parsed[i][1];
+                filename = parsed[i][1];
                 if (!preservePath) {
-                  filename2 = basename3(filename2);
+                  filename = basename3(filename);
                 }
               }
             }
@@ -2772,7 +2772,7 @@ var require_multipart = __commonJS({
             encoding = "7bit";
           }
           let onData, onEnd;
-          if (isPartAFile(fieldname, contype, filename2)) {
+          if (isPartAFile(fieldname, contype, filename)) {
             if (nfiles === filesLimit) {
               if (!boy.hitFilesLimit) {
                 boy.hitFilesLimit = true;
@@ -2809,7 +2809,7 @@ var require_multipart = __commonJS({
                 cb();
               }
             };
-            boy.emit("file", fieldname, file, filename2, encoding, contype);
+            boy.emit("file", fieldname, file, filename, encoding, contype);
             onData = function(data) {
               if ((nsize += data.length) > fileSizeLimit) {
                 const extralen = fileSizeLimit - nsize + data.length;
@@ -5112,7 +5112,7 @@ var require_formdata = __commonJS({
         }
         this[kState] = [];
       }
-      append(name, value, filename2 = void 0) {
+      append(name, value, filename = void 0) {
         webidl.brandCheck(this, _FormData);
         webidl.argumentLengthCheck(arguments, 2, { header: "FormData.append" });
         if (arguments.length === 3 && !isBlobLike(value)) {
@@ -5122,8 +5122,8 @@ var require_formdata = __commonJS({
         }
         name = webidl.converters.USVString(name);
         value = isBlobLike(value) ? webidl.converters.Blob(value, { strict: false }) : webidl.converters.USVString(value);
-        filename2 = arguments.length === 3 ? webidl.converters.USVString(filename2) : void 0;
-        const entry = makeEntry(name, value, filename2);
+        filename = arguments.length === 3 ? webidl.converters.USVString(filename) : void 0;
+        const entry = makeEntry(name, value, filename);
         this[kState].push(entry);
       }
       delete(name) {
@@ -5154,7 +5154,7 @@ var require_formdata = __commonJS({
         name = webidl.converters.USVString(name);
         return this[kState].findIndex((entry) => entry.name === name) !== -1;
       }
-      set(name, value, filename2 = void 0) {
+      set(name, value, filename = void 0) {
         webidl.brandCheck(this, _FormData);
         webidl.argumentLengthCheck(arguments, 2, { header: "FormData.set" });
         if (arguments.length === 3 && !isBlobLike(value)) {
@@ -5164,8 +5164,8 @@ var require_formdata = __commonJS({
         }
         name = webidl.converters.USVString(name);
         value = isBlobLike(value) ? webidl.converters.Blob(value, { strict: false }) : webidl.converters.USVString(value);
-        filename2 = arguments.length === 3 ? toUSVString(filename2) : void 0;
-        const entry = makeEntry(name, value, filename2);
+        filename = arguments.length === 3 ? toUSVString(filename) : void 0;
+        const entry = makeEntry(name, value, filename);
         const idx = this[kState].findIndex((entry2) => entry2.name === name);
         if (idx !== -1) {
           this[kState] = [
@@ -5225,7 +5225,7 @@ var require_formdata = __commonJS({
         configurable: true
       }
     });
-    function makeEntry(name, value, filename2) {
+    function makeEntry(name, value, filename) {
       name = Buffer.from(name).toString("utf8");
       if (typeof value === "string") {
         value = Buffer.from(value).toString("utf8");
@@ -5233,12 +5233,12 @@ var require_formdata = __commonJS({
         if (!isFileLike(value)) {
           value = value instanceof Blob2 ? new File2([value], "blob", { type: value.type }) : new FileLike(value, "blob", { type: value.type });
         }
-        if (filename2 !== void 0) {
+        if (filename !== void 0) {
           const options = {
             type: value.type,
             lastModified: value.lastModified
           };
-          value = NativeFile && value instanceof NativeFile || value instanceof UndiciFile ? new File2([value], filename2, options) : new FileLike(value, filename2, options);
+          value = NativeFile && value instanceof NativeFile || value instanceof UndiciFile ? new File2([value], filename, options) : new FileLike(value, filename, options);
         }
       }
       return { name, value };
@@ -5503,7 +5503,7 @@ Content-Type: ${value.type || "application/octet-stream"}\r
             busboy.on("field", (name, value) => {
               responseFormData.append(name, value);
             });
-            busboy.on("file", (name, value, filename2, encoding, mimeType) => {
+            busboy.on("file", (name, value, filename, encoding, mimeType) => {
               const chunks = [];
               if (encoding === "base64" || encoding.toLowerCase() === "base64") {
                 let base64chunk = "";
@@ -5515,14 +5515,14 @@ Content-Type: ${value.type || "application/octet-stream"}\r
                 });
                 value.on("end", () => {
                   chunks.push(Buffer.from(base64chunk, "base64"));
-                  responseFormData.append(name, new File2(chunks, filename2, { type: mimeType }));
+                  responseFormData.append(name, new File2(chunks, filename, { type: mimeType }));
                 });
               } else {
                 value.on("data", (chunk) => {
                   chunks.push(chunk);
                 });
                 value.on("end", () => {
-                  responseFormData.append(name, new File2(chunks, filename2, { type: mimeType }));
+                  responseFormData.append(name, new File2(chunks, filename, { type: mimeType }));
                 });
               }
             });
@@ -24510,7 +24510,7 @@ var require_formdata2 = __commonJS({
         }
         this[kState] = [];
       }
-      append(name, value, filename2 = void 0) {
+      append(name, value, filename = void 0) {
         webidl.brandCheck(this, _FormData);
         const prefix2 = "FormData.append";
         webidl.argumentLengthCheck(arguments, 2, prefix2);
@@ -24521,8 +24521,8 @@ var require_formdata2 = __commonJS({
         }
         name = webidl.converters.USVString(name, prefix2, "name");
         value = isBlobLike(value) ? webidl.converters.Blob(value, prefix2, "value", { strict: false }) : webidl.converters.USVString(value, prefix2, "value");
-        filename2 = arguments.length === 3 ? webidl.converters.USVString(filename2, prefix2, "filename") : void 0;
-        const entry = makeEntry(name, value, filename2);
+        filename = arguments.length === 3 ? webidl.converters.USVString(filename, prefix2, "filename") : void 0;
+        const entry = makeEntry(name, value, filename);
         this[kState].push(entry);
       }
       delete(name) {
@@ -24557,7 +24557,7 @@ var require_formdata2 = __commonJS({
         name = webidl.converters.USVString(name, prefix2, "name");
         return this[kState].findIndex((entry) => entry.name === name) !== -1;
       }
-      set(name, value, filename2 = void 0) {
+      set(name, value, filename = void 0) {
         webidl.brandCheck(this, _FormData);
         const prefix2 = "FormData.set";
         webidl.argumentLengthCheck(arguments, 2, prefix2);
@@ -24568,8 +24568,8 @@ var require_formdata2 = __commonJS({
         }
         name = webidl.converters.USVString(name, prefix2, "name");
         value = isBlobLike(value) ? webidl.converters.Blob(value, prefix2, "name", { strict: false }) : webidl.converters.USVString(value, prefix2, "name");
-        filename2 = arguments.length === 3 ? webidl.converters.USVString(filename2, prefix2, "name") : void 0;
-        const entry = makeEntry(name, value, filename2);
+        filename = arguments.length === 3 ? webidl.converters.USVString(filename, prefix2, "name") : void 0;
+        const entry = makeEntry(name, value, filename);
         const idx = this[kState].findIndex((entry2) => entry2.name === name);
         if (idx !== -1) {
           this[kState] = [
@@ -24613,18 +24613,18 @@ var require_formdata2 = __commonJS({
         configurable: true
       }
     });
-    function makeEntry(name, value, filename2) {
+    function makeEntry(name, value, filename) {
       if (typeof value === "string") {
       } else {
         if (!isFileLike(value)) {
           value = value instanceof Blob ? new File2([value], "blob", { type: value.type }) : new FileLike(value, "blob", { type: value.type });
         }
-        if (filename2 !== void 0) {
+        if (filename !== void 0) {
           const options = {
             type: value.type,
             lastModified: value.lastModified
           };
-          value = value instanceof NativeFile ? new File2([value], filename2, options) : new FileLike(value, filename2, options);
+          value = value instanceof NativeFile ? new File2([value], filename, options) : new FileLike(value, filename, options);
         }
       }
       return { name, value };
@@ -24706,7 +24706,7 @@ var require_formdata_parser = __commonJS({
         if (result === "failure") {
           return "failure";
         }
-        let { name, filename: filename2, contentType: contentType2, encoding } = result;
+        let { name, filename, contentType: contentType2, encoding } = result;
         position.position += 2;
         let body2;
         {
@@ -24726,23 +24726,23 @@ var require_formdata_parser = __commonJS({
           position.position += 2;
         }
         let value;
-        if (filename2 !== null) {
+        if (filename !== null) {
           contentType2 ??= "text/plain";
           if (!isAsciiString(contentType2)) {
             contentType2 = "";
           }
-          value = new File2([body2], filename2, { type: contentType2 });
+          value = new File2([body2], filename, { type: contentType2 });
         } else {
           value = utf8DecodeBytes(Buffer.from(body2));
         }
         assert(isUSVString(name));
         assert(typeof value === "string" && isUSVString(value) || isFileLike(value));
-        entryList.push(makeEntry(name, value, filename2));
+        entryList.push(makeEntry(name, value, filename));
       }
     }
     function parseMultipartFormDataHeaders(input, position) {
       let name = null;
-      let filename2 = null;
+      let filename = null;
       let contentType2 = null;
       let encoding = null;
       while (true) {
@@ -24750,7 +24750,7 @@ var require_formdata_parser = __commonJS({
           if (name === null) {
             return "failure";
           }
-          return { name, filename: filename2, contentType: contentType2, encoding };
+          return { name, filename, contentType: contentType2, encoding };
         }
         let headerName = collectASequenceOfBytes(
           (char) => char !== 10 && char !== 13 && char !== 58,
@@ -24772,7 +24772,7 @@ var require_formdata_parser = __commonJS({
         );
         switch (bufferToLowerCasedHeaderName(headerName)) {
           case "content-disposition": {
-            name = filename2 = null;
+            name = filename = null;
             if (!bufferStartsWith(input, formDataNameBuffer, position)) {
               return "failure";
             }
@@ -24791,8 +24791,8 @@ var require_formdata_parser = __commonJS({
                 return "failure";
               }
               position.position += 12;
-              filename2 = parseMultipartFormDataName(input, position);
-              if (filename2 === null) {
+              filename = parseMultipartFormDataName(input, position);
+              if (filename === null) {
                 return "failure";
               }
             }
@@ -38918,17 +38918,17 @@ var require_minimatch = __commonJS({
       this.debug(this.pattern, "split", f);
       var set = this.set;
       this.debug(this.pattern, "set", set);
-      var filename2;
+      var filename;
       var i;
       for (i = f.length - 1; i >= 0; i--) {
-        filename2 = f[i];
-        if (filename2) break;
+        filename = f[i];
+        if (filename) break;
       }
       for (i = 0; i < set.length; i++) {
         var pattern = set[i];
         var file = f;
         if (options.matchBase && pattern.length === 1) {
-          file = [filename2];
+          file = [filename];
         }
         var hit = this.matchOne(file, pattern, partial);
         if (hit) {
@@ -42526,34 +42526,34 @@ var require_base64 = __commonJS({
     }
     exports2.base64decode = base64decode;
     function base64encode2(bytes) {
-      let base642 = "", groupPos = 0, b, p = 0;
+      let base64 = "", groupPos = 0, b, p = 0;
       for (let i = 0; i < bytes.length; i++) {
         b = bytes[i];
         switch (groupPos) {
           case 0:
-            base642 += encTable[b >> 2];
+            base64 += encTable[b >> 2];
             p = (b & 3) << 4;
             groupPos = 1;
             break;
           case 1:
-            base642 += encTable[p | b >> 4];
+            base64 += encTable[p | b >> 4];
             p = (b & 15) << 2;
             groupPos = 2;
             break;
           case 2:
-            base642 += encTable[p | b >> 6];
-            base642 += encTable[b & 63];
+            base64 += encTable[p | b >> 6];
+            base64 += encTable[b & 63];
             groupPos = 0;
             break;
         }
       }
       if (groupPos) {
-        base642 += encTable[p];
-        base642 += "=";
+        base64 += encTable[p];
+        base64 += "=";
         if (groupPos == 1)
-          base642 += "=";
+          base64 += "=";
       }
-      return base642;
+      return base64;
     }
     exports2.base64encode = base64encode2;
   }
@@ -46662,112 +46662,6 @@ var require_commonjs2 = __commonJS({
     Object.defineProperty(exports2, "ServerCallContextController", { enumerable: true, get: function() {
       return server_call_context_1.ServerCallContextController;
     } });
-  }
-});
-
-// node_modules/base-64/base64.js
-var require_base642 = __commonJS({
-  "node_modules/base-64/base64.js"(exports2, module2) {
-    (function(root) {
-      var freeExports = typeof exports2 == "object" && exports2;
-      var freeModule = typeof module2 == "object" && module2 && module2.exports == freeExports && module2;
-      var freeGlobal = typeof global == "object" && global;
-      if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
-        root = freeGlobal;
-      }
-      var InvalidCharacterError = function(message) {
-        this.message = message;
-      };
-      InvalidCharacterError.prototype = new Error();
-      InvalidCharacterError.prototype.name = "InvalidCharacterError";
-      var error2 = function(message) {
-        throw new InvalidCharacterError(message);
-      };
-      var TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-      var REGEX_SPACE_CHARACTERS = /[\t\n\f\r ]/g;
-      var decode = function(input) {
-        input = String(input).replace(REGEX_SPACE_CHARACTERS, "");
-        var length = input.length;
-        if (length % 4 == 0) {
-          input = input.replace(/==?$/, "");
-          length = input.length;
-        }
-        if (length % 4 == 1 || // http://whatwg.org/C#alphanumeric-ascii-characters
-        /[^+a-zA-Z0-9/]/.test(input)) {
-          error2(
-            "Invalid character: the string to be decoded is not correctly encoded."
-          );
-        }
-        var bitCounter = 0;
-        var bitStorage;
-        var buffer3;
-        var output = "";
-        var position = -1;
-        while (++position < length) {
-          buffer3 = TABLE.indexOf(input.charAt(position));
-          bitStorage = bitCounter % 4 ? bitStorage * 64 + buffer3 : buffer3;
-          if (bitCounter++ % 4) {
-            output += String.fromCharCode(
-              255 & bitStorage >> (-2 * bitCounter & 6)
-            );
-          }
-        }
-        return output;
-      };
-      var encode = function(input) {
-        input = String(input);
-        if (/[^\0-\xFF]/.test(input)) {
-          error2(
-            "The string to be encoded contains characters outside of the Latin1 range."
-          );
-        }
-        var padding = input.length % 3;
-        var output = "";
-        var position = -1;
-        var a;
-        var b;
-        var c;
-        var buffer3;
-        var length = input.length - padding;
-        while (++position < length) {
-          a = input.charCodeAt(position) << 16;
-          b = input.charCodeAt(++position) << 8;
-          c = input.charCodeAt(++position);
-          buffer3 = a + b + c;
-          output += TABLE.charAt(buffer3 >> 18 & 63) + TABLE.charAt(buffer3 >> 12 & 63) + TABLE.charAt(buffer3 >> 6 & 63) + TABLE.charAt(buffer3 & 63);
-        }
-        if (padding == 2) {
-          a = input.charCodeAt(position) << 8;
-          b = input.charCodeAt(++position);
-          buffer3 = a + b;
-          output += TABLE.charAt(buffer3 >> 10) + TABLE.charAt(buffer3 >> 4 & 63) + TABLE.charAt(buffer3 << 2 & 63) + "=";
-        } else if (padding == 1) {
-          buffer3 = input.charCodeAt(position);
-          output += TABLE.charAt(buffer3 >> 2) + TABLE.charAt(buffer3 << 4 & 63) + "==";
-        }
-        return output;
-      };
-      var base642 = {
-        "encode": encode,
-        "decode": decode,
-        "version": "1.0.0"
-      };
-      if (typeof define == "function" && typeof define.amd == "object" && define.amd) {
-        define(function() {
-          return base642;
-        });
-      } else if (freeExports && !freeExports.nodeType) {
-        if (freeModule) {
-          freeModule.exports = base642;
-        } else {
-          for (var key in base642) {
-            base642.hasOwnProperty(key) && (freeExports[key] = base642[key]);
-          }
-        }
-      } else {
-        root.base64 = base642;
-      }
-    })(exports2);
   }
 });
 
@@ -83441,7 +83335,6 @@ var import_process = __toESM(require("process"));
 var import_path = __toESM(require("path"));
 var import_os7 = __toESM(require("os"));
 var import_fs5 = __toESM(require("fs"));
-var import_base_64 = __toESM(require_base642());
 function unixify(s) {
   return s.split(import_path.default.sep).join(import_path.default.posix.sep);
 }
@@ -83455,26 +83348,29 @@ function installedLocation() {
   switch (import_os7.default.platform()) {
     case "linux":
       return "";
-      break;
     case "win32":
       return import_path.default.join(import_process.default.env["RUNNER_TEMP"], "lazarus");
-      break;
     case "darwin":
       return import_path.default.join(import_process.default.env["RUNNER_TEMP"], "lazarus");
-      break;
   }
 }
 function useCache() {
   return core.getInput("use-cache").toUpperCase() == "TRUE";
 }
+function debugBuild() {
+  return core.getInput("debug-build").toUpperCase() == "TRUE";
+}
 function lazURL() {
-  return core.getInput("laz-url").split(import_os7.default.EOL);
+  return core.getInput("laz-url").split(/\r?\n/);
 }
 function fpcURL() {
-  return core.getInput("fpc-url").split(import_os7.default.EOL);
+  return core.getInput("fpc-url").split(/\r?\n/);
+}
+function urlTail(url2) {
+  return url2.split("/").slice(-3).join("/");
 }
 function cacheKey() {
-  return import_base_64.default.encode(core.getInput("laz-url") + "-" + core.getInput("fpc-url"));
+  return [...lazURL(), ...fpcURL()].filter(Boolean).map(urlTail).join("-");
 }
 async function install_macos(file) {
   function checkmount(file2) {
@@ -83522,7 +83418,7 @@ async function install(url2, download) {
   if (url2 == "") {
     return;
   }
-  filename = import_path.default.join(installersLocation(), import_path.default.basename(url2));
+  const filename = import_path.default.join(installersLocation(), import_path.default.basename(url2.replace(/\/download\/?$/, "")));
   if (download) {
     if (!await downloadTool(url2, filename)) {
       throw new Error("Failed to download: " + url2);
@@ -83552,14 +83448,30 @@ async function sourceForge() {
       }
     }
     for (const url2 of fpcURL()) {
-      await install(url2, cacheLoaded == false);
+      await install(url2, !cacheLoaded);
     }
     for (const url2 of lazURL()) {
-      await install(url2, cacheLoaded == false);
+      await install(url2, !cacheLoaded);
     }
-    core.addPath(installedLocation());
+    const installed = installedLocation();
+    if (installed) {
+      core.addPath(installed);
+    }
   } catch (error2) {
     core.setFailed(error2.message);
+  }
+}
+async function runDsymutil(installDir) {
+  const binDir = import_path.default.join(installDir, "fpc", "bin");
+  if (!import_fs5.default.existsSync(binDir)) {
+    return;
+  }
+  const compiler = import_os7.default.arch() === "arm64" ? "ppca64" : "ppcx64";
+  for (const target of import_fs5.default.readdirSync(binDir)) {
+    const file = import_path.default.join(binDir, target, compiler);
+    if (import_fs5.default.existsSync(file)) {
+      await exec("dsymutil", [file]);
+    }
   }
 }
 async function fpcLazUp() {
@@ -83578,7 +83490,8 @@ async function fpcLazUp() {
     }
     const fpcLazupFile = unixify(import_path.default.join(import_process.default.env["RUNNER_TEMP"], "fpclazupbin") + (import_process.default.platform === "win32" ? ".exe" : ""));
     const installDir = unixify(import_path.default.join(import_process.default.env["RUNNER_TEMP"], "fpclazup") + "/");
-    const cacheKey2 = import_process.default.env["ImageOS"] + " " + fpcLazupUrl + " " + fpcCommit + lazCommit;
+    const debug4 = debugBuild();
+    const cacheKey2 = import_process.default.env["ImageOS"] + " " + urlTail(fpcLazupUrl) + " " + fpcCommit + " " + lazCommit + (debug4 ? " debug" : "");
     const cacheLoaded = await restoreCache([installDir], cacheKey2) != null;
     if (!cacheLoaded) {
       await exec("mkdir", [
@@ -83618,20 +83531,26 @@ async function fpcLazUp() {
       }
       await exec(fpcLazupFile, [
         "--only=FPCCleanOnly,FPCBuildOnly,LazarusCleanOnly,LazBuild,LazarusConfigOnly",
+        debug4 ? "--fpcOPT=-g -gl -gw2" : "",
+        debug4 ? "--lazOPT=-g -gl -gw2" : "",
         "--noconfirm",
         "--verbose",
         "--installdir=" + installDir
-      ]);
+      ].filter(Boolean));
       if (import_process.default.platform == "win32") {
         await exec(fpcLazupFile, [
           "--only=FPCCleanOnly,FPCBuildOnly",
           "--ostarget=win32",
           "--cputarget=i386",
           "--autotools",
+          debug4 ? "--fpcOPT=-g -gl -gw2" : "",
           "--noconfirm",
           "--verbose",
           "--installdir=" + installDir
-        ]);
+        ].filter(Boolean));
+      }
+      if (debug4 && import_process.default.platform === "darwin") {
+        await runDsymutil(installDir);
       }
       core.exportVariable("SAVE_CACHE_DIR", installDir);
       core.exportVariable("SAVE_CACHE_KEY", cacheKey2);
@@ -83667,7 +83586,4 @@ undici/lib/web/fetch/body.js:
 undici/lib/websocket/frame.js:
 undici/lib/web/websocket/frame.js:
   (*! ws. MIT License. Einar Otto Stangvik <einaros@gmail.com> *)
-
-base-64/base64.js:
-  (*! https://mths.be/base64 v1.0.0 by @mathias | MIT license *)
 */

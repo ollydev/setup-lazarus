@@ -18,35 +18,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config:          
+        config:
           - os: windows-latest
             name: Windows 64
-            args: ""
             fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-x86_64-win64.exe
             fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
             fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
 
           - os: windows-latest
             name: Windows 32
-            args: "--cpu=i386"
-            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-x86_64-win64.exe
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-i386-win32.exe
             fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
             fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
 
           - os: ubuntu-latest
             name: Linux 64
-            args: ""
             fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-x86_64-linux
             fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
             fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
 
+          - os: ubuntu-24.04-arm
+            name: Linux aarch64
+            fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-aarch64-linux
+            fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
+            fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
+
           - os: macos-26
-            name: MacOS arm64
-            args: ""
+            name: macOS aarch64
             fpclazup-url: https://github.com/LongDirtyAnimAlf/Reiniero-fpcup/releases/download/v2.4.0g/fpclazup-aarch64-darwin
             fpclazup-lazcommit: 98f9c7a7a102139e43b39050ebbb5c48d805f59f # 4.4
             fpclazup-fpccommit: de30ac10d4f228c5d4915c49d48715063ea55787 # trunk (~3.3)
-            
+
     steps:
       - uses: actions/checkout@v5
 
@@ -58,7 +60,11 @@ jobs:
           fpclazup-lazcommit: ${{ matrix.config.fpclazup-lazcommit }}
 
       - name: Build Test
-        run: lazbuild ${{ matrix.config.args }} test_lazarus.lpi
+        run: lazbuild test_lazarus.lpi
+
+      - name: Generate macos debug symbols
+        if: startsWith(runner.os, 'macOS')
+        run: dsymutil ./test
 
       - name: Run Test
         run: ./test

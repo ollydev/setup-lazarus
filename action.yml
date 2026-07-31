@@ -13,7 +13,10 @@ inputs:
   fpclazup-fpccommit:
     required: false  
   fpclazup-lazcommit:
-    required: false    
+    required: false
+  debug-build:
+    required: false
+    default: 'false'
 runs:
   using: 'node24'
   main: 'dist/index/index.js'
