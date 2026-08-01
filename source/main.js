@@ -195,6 +195,7 @@ async function sourceForge()
         }
 
         const installed = installedLocation();
+        core.setOutput('install-dir', installed);
         if (installed)
         {
             core.addPath(installed);
@@ -333,6 +334,7 @@ async function fpcLazUp()
             core.exportVariable('SAVE_CACHE_DIR', installDir);
             core.exportVariable('SAVE_CACHE_KEY', cacheKey);
         }
+        core.setOutput('install-dir', installDir.replace(/\/+$/, ''));
         core.addPath(path.join(installDir, 'lazarus'));
     }
     catch (error)

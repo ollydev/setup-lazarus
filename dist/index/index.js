@@ -19708,7 +19708,7 @@ var require_core = __commonJS({
 Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
     }
     exports2.getBooleanInput = getBooleanInput;
-    function setOutput(name, value) {
+    function setOutput2(name, value) {
       const filePath = process.env["GITHUB_OUTPUT"] || "";
       if (filePath) {
         return (0, file_command_1.issueFileCommand)("OUTPUT", (0, file_command_1.prepareKeyValueMessage)(name, value));
@@ -19716,7 +19716,7 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       process.stdout.write(os11.EOL);
       (0, command_1.issueCommand)("set-output", { name }, (0, utils_1.toCommandValue)(value));
     }
-    exports2.setOutput = setOutput;
+    exports2.setOutput = setOutput2;
     function setCommandEcho(enabled2) {
       (0, command_1.issue)("echo", enabled2 ? "on" : "off");
     }
@@ -83454,6 +83454,7 @@ async function sourceForge() {
       await install(url2, !cacheLoaded);
     }
     const installed = installedLocation();
+    core.setOutput("install-dir", installed);
     if (installed) {
       core.addPath(installed);
     }
@@ -83555,6 +83556,7 @@ async function fpcLazUp() {
       core.exportVariable("SAVE_CACHE_DIR", installDir);
       core.exportVariable("SAVE_CACHE_KEY", cacheKey2);
     }
+    core.setOutput("install-dir", installDir.replace(/\/+$/, ""));
     core.addPath(import_path.default.join(installDir, "lazarus"));
   } catch (error2) {
     core.setFailed(error2.message);

@@ -2,21 +2,31 @@ name: 'Setup Lazarus'
 description: 'Setup Lazarus using installers from sourceforge'
 inputs:
   use-cache:
+    description: 'Cache the installation between runs to speed up later builds'
     required: false
     default: 'true'
-  laz-url: 
+  laz-url:
+    description: 'SourceForge URL(s) of the Lazarus installer'
     required: false
-  fpc-url: 
+  fpc-url:
+    description: 'SourceForge URL(s) of the FPC installer(s)'
     required: false
   fpclazup-url:
+    description: 'URL to an fpclazup binary'
     required: false
   fpclazup-fpccommit:
-    required: false  
+    description: 'FPC source commit SHA to build (fpclazup mode)'
+    required: false
   fpclazup-lazcommit:
+    description: 'Lazarus source commit SHA to build (fpclazup mode)'
     required: false
   debug-build:
+    description: 'Build FPC and Lazarus with debug info (fpclazup mode)'
     required: false
     default: 'false'
+outputs:
+  install-dir:
+    description: 'Root install directory'
 runs:
   using: 'node24'
   main: 'dist/index/index.js'
