@@ -309,9 +309,8 @@ async function fpcLazUp()
                 '--verbose',
                 '--installdir=' + installDir
             ].filter(Boolean));
-            
-            // on windows install 32bit cross compiler
-            if (process.platform == 'win32')
+
+            if (process.platform == 'win32' && !fpcLazupUrl.includes('i386'))
             {
                 await exec.exec(fpcLazupFile, [
                     '--only=FPCCleanOnly,FPCBuildOnly',

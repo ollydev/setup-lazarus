@@ -83537,7 +83537,7 @@ async function fpcLazUp() {
         "--verbose",
         "--installdir=" + installDir
       ].filter(Boolean));
-      if (import_process.default.platform == "win32") {
+      if (import_process.default.platform == "win32" && !fpcLazupUrl.includes("i386")) {
         await exec(fpcLazupFile, [
           "--only=FPCCleanOnly,FPCBuildOnly",
           "--ostarget=win32",
